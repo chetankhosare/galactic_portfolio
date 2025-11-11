@@ -1,0 +1,140 @@
+/* --- Base Setup (from your original code) --- */
+body {
+    margin: 0;
+    overflow: hidden; 
+    background: #000008; 
+    /* Set a smooth, readable font for the portfolio content */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+}
+
+/* Ensure the canvas is the background */
+canvas {
+    display: block;
+    position: fixed; /* Keep it fixed in the background */
+    top: 0;
+    left: 0;
+    z-index: 1; /* Keep it below the content */
+}
+
+/* --- Portfolio Content Overlay Styles --- */
+#content-overlay {
+    position: relative; /* Allows content to stack normally */
+    z-index: 10; /* Put it on top of the canvas (z-index: 1) */
+    color: #FFFFFF; /* White text for contrast */
+    padding: 0 20px;
+    text-align: center;
+    pointer-events: none; /* Allows mouse to interact with canvas controls, UNLESS on a link/button */
+}
+
+/* Make interactive elements clickable */
+#content-overlay a, 
+#content-overlay button, 
+#content-overlay input {
+    pointer-events: auto;
+}
+
+/* --- Portfolio Section Styles --- */
+header {
+    background: rgba(0, 0, 0, 0.4); /* Slightly opaque for readability */
+    padding: 15px 0;
+    margin-bottom: 50vh; /* Push the hero text down a bit */
+    pointer-events: auto; /* Ensure navigation is clickable */
+}
+
+nav a {
+    color: #00FFFF; /* Cyan for links */
+    text-decoration: none;
+    margin: 0 15px;
+    font-size: 1.1em;
+    transition: color 0.3s;
+}
+
+nav a:hover {
+    color: #FFFFFF;
+}
+
+main {
+    padding-top: 50px;
+}
+
+section {
+    min-height: 80vh; /* Make sections long enough to scroll */
+    padding: 60px 20px;
+    background: rgba(0, 0, 0, 0.7); /* Dark background for readability */
+    margin: 40px 0;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+}
+
+
+/* Project cards */
+.project-list { display: flex; gap: 12px; flex-wrap: wrap; }
+.project-card {
+    background: rgba(255,255,255,0.03);
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 180ms ease, background 180ms ease;
+}
+.project-card:hover { transform: translateY(-4px); background: rgba(255,255,255,0.06); }
+.project-card.active { box-shadow: 0 6px 24px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.06); }
+
+/* Info overlay */
+#info-overlay.hidden { display: none; }
+#info-overlay {
+    position: fixed;
+    right: 24px;
+    top: 24px;
+    width: 320px;
+    max-width: calc(100% - 48px);
+    background: linear-gradient(180deg, rgba(10,12,20,0.9), rgba(6,8,14,0.85));
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 16px;
+    border-radius: 12px;
+    color: #e8f0ff;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+    z-index: 30;
+}
+#info-overlay h3 { margin: 0 0 6px 0; font-size: 18px; }
+#info-overlay h4 { margin: 0 0 10px 0; font-size: 13px; color: #9fb0ff; font-weight: 500; }
+#info-overlay p { margin: 0 0 8px 0; font-size: 13px; line-height: 1.3; color: #cfe3ff; }
+#info-overlay #info-meta { font-size: 12px; opacity: 0.8; color: #9aaee6; }
+#info-close {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    background: transparent;
+    color: #fff;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+#hero h1 {
+    font-size: 4em;
+    margin-bottom: 10px;
+    text-shadow: 0 0 10px #00FFFF; /* Neon glow effect */
+}
+
+.cta-button {
+    display: inline-block;
+    background: #00FFFF;
+    color: #000008;
+    padding: 12px 25px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-top: 20px;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.cta-button:hover {
+    background: #FFFFFF;
+    transform: scale(1.05);
+}
+
+footer {
+    padding: 20px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: #AAAAAA;
+}

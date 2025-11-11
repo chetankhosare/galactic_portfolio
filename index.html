@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galactic Portfolio: [Your Name]</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    
+    <div id="content-overlay">
+        
+        <header>
+            <nav>
+                <a href="#about">About</a>
+                <a href="#projects">Projects</a>
+                <a href="#contact">Contact</a>
+            </nav>
+        </header>
+        
+        <main>
+            <section id="hero">
+                <h1>**[Your Name]**</h1>
+                <p>Full Stack Developer | Creator of Digital Galaxies</p>
+                <a href="#projects" class="cta-button">View My Cosmos</a>
+            </section>
+            
+            <section id="projects">
+                <h2>Galactic Projects</h2>
+                <div class="project-list">
+                    <div class="project-card" data-title="Stellar E-commerce" data-subtitle="A fast interstellar shop" data-desc="A full-stack e-commerce platform themed like a space bazaar. Built with performant servers and an eye for UX.">Project 1: Stellar E-commerce Platform</div>
+                    <div class="project-card" data-title="Asteroid Analyzer" data-subtitle="Mining data from the belt" data-desc="A data analysis suite that visualizes asteroid trajectories and resource estimates with predictive models.">Project 2: Asteroid Data Analyzer</div>
+                </div>
+            </section>
+
+            <section id="contact">
+                <h2>Warp Speed Contact</h2>
+                <p>Email me at: orbit@[yourdomain].com</p>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2024 Galactic Portfolio</p>
+        </footer>
+    </div>
+
+    <!-- Info overlay shown when a particle or project is selected -->
+    <div id="info-overlay" class="hidden">
+        <button id="info-close" aria-label="Close">×</button>
+        <div id="info-content">
+            <h3 id="info-title">Title</h3>
+            <h4 id="info-subtitle">Subtitle</h4>
+            <p id="info-desc">Description</p>
+            <div id="info-meta">Movie-style credits and visuals will go here.</div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
