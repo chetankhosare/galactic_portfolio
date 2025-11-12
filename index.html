@@ -1,19 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Galactic Portfolio: [Your Name]</title>
-    
-    <link rel="stylesheet" href="style.css">
-    
+
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- three.js (r128) and OrbitControls (example) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
-    
+    <!-- Left-side scrollable project banner panel -->
+    <aside id="left-panel" aria-label="Projects panel">
+        <div id="projects-scroll">
+            <!-- Example banners: add/duplicate these for your projects -->
+            <div class="project-banner project-card" data-title="Stellar E-commerce" data-subtitle="A fast interstellar shop" data-desc="A full-stack e-commerce platform themed like a space bazaar. Built with performant servers and an eye for UX.">Stellar E-commerce</div>
+            <div class="project-banner project-card" data-title="Asteroid Analyzer" data-subtitle="Mining data from the belt" data-desc="A data analysis suite that visualizes asteroid trajectories and resource estimates with predictive models.">Asteroid Analyzer</div>
+            <div class="project-banner project-card" data-title="Orbit Visualizer" data-subtitle="Interactive orbital simulator" data-desc="An interactive simulator for visualizing orbital paths and maneuver planning.">Orbit Visualizer</div>
+            <div class="project-banner project-card" data-title="Nebula Studio" data-subtitle="Procedural art engine" data-desc="Generative artworks and shaders inspired by nebulae and volumetric clouds.">Nebula Studio</div>
+            <!-- Add more banners as needed -->
+        </div>
+    </aside>
+
     <div id="content-overlay">
-        
         <header>
             <nav>
                 <a href="#about">About</a>
@@ -21,19 +32,18 @@
                 <a href="#contact">Contact</a>
             </nav>
         </header>
-        
+
         <main>
             <section id="hero">
                 <h1>**[Your Name]**</h1>
                 <p>Full Stack Developer | Creator of Digital Galaxies</p>
                 <a href="#projects" class="cta-button">View My Cosmos</a>
             </section>
-            
+
             <section id="projects">
                 <h2>Galactic Projects</h2>
-                <div class="project-list">
-                    <div class="project-card" data-title="Stellar E-commerce" data-subtitle="A fast interstellar shop" data-desc="A full-stack e-commerce platform themed like a space bazaar. Built with performant servers and an eye for UX.">Project 1: Stellar E-commerce Platform</div>
-                    <div class="project-card" data-title="Asteroid Analyzer" data-subtitle="Mining data from the belt" data-desc="A data analysis suite that visualizes asteroid trajectories and resource estimates with predictive models.">Project 2: Asteroid Data Analyzer</div>
+                <div class="project-list visually-hidden">
+                    <!-- kept for compatibility if you want the original inline cards; they are hidden now -->
                 </div>
             </section>
 
@@ -42,14 +52,14 @@
                 <p>Email me at: orbit@[yourdomain].com</p>
             </section>
         </main>
-        
+
         <footer>
             <p>&copy; 2024 Galactic Portfolio</p>
         </footer>
     </div>
 
-    <!-- Info overlay shown when a particle or project is selected -->
-    <div id="info-overlay" class="hidden">
+    <!-- Info overlay shown when a particle or project is selected (right-side cinematic info) -->
+    <div id="info-overlay" class="hidden cinematic-info">
         <button id="info-close" aria-label="Close">×</button>
         <div id="info-content">
             <h3 id="info-title">Title</h3>
@@ -61,5 +71,4 @@
 
     <script src="script.js"></script>
 </body>
-</html>`    
-
+</html>

@@ -1,48 +1,47 @@
 /* --- Base Setup (from your original code) --- */
 body {
     margin: 0;
-    overflow: hidden; 
-    background: #000008; 
-    /* Set a smooth, readable font for the portfolio content */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    overflow: hidden;
+    background: #000008;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Ensure the canvas is the background */
 canvas {
     display: block;
-    position: fixed; /* Keep it fixed in the background */
+    position: fixed;
     top: 0;
     left: 0;
-    z-index: 1; /* Keep it below the content */
+    z-index: 1;
 }
 
 /* --- Portfolio Content Overlay Styles --- */
 #content-overlay {
-    position: relative; /* Allows content to stack normally */
-    z-index: 10; /* Put it on top of the canvas (z-index: 1) */
-    color: #FFFFFF; /* White text for contrast */
+    position: relative;
+    z-index: 20;
+    color: #FFFFFF;
     padding: 0 20px;
     text-align: center;
-    pointer-events: none; /* Allows mouse to interact with canvas controls, UNLESS on a link/button */
+    pointer-events: none;
 }
 
 /* Make interactive elements clickable */
-#content-overlay a, 
-#content-overlay button, 
+#content-overlay a,
+#content-overlay button,
 #content-overlay input {
     pointer-events: auto;
 }
 
-/* --- Portfolio Section Styles --- */
+/* Header */
 header {
-    background: rgba(0, 0, 0, 0.4); /* Slightly opaque for readability */
+    background: rgba(0, 0, 0, 0.4);
     padding: 15px 0;
-    margin-bottom: 50vh; /* Push the hero text down a bit */
-    pointer-events: auto; /* Ensure navigation is clickable */
+    margin-bottom: 50vh;
+    pointer-events: auto;
 }
 
 nav a {
-    color: #00FFFF; /* Cyan for links */
+    color: #00FFFF;
     text-decoration: none;
     margin: 0 15px;
     font-size: 1.1em;
@@ -58,14 +57,13 @@ main {
 }
 
 section {
-    min-height: 80vh; /* Make sections long enough to scroll */
+    min-height: 80vh;
     padding: 60px 20px;
-    background: rgba(0, 0, 0, 0.7); /* Dark background for readability */
+    background: rgba(0, 0, 0, 0.7);
     margin: 40px 0;
     border-radius: 8px;
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
 }
-
 
 /* Project cards */
 .project-list { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -113,7 +111,7 @@ section {
 #hero h1 {
     font-size: 4em;
     margin-bottom: 10px;
-    text-shadow: 0 0 10px #00FFFF; /* Neon glow effect */
+    text-shadow: 0 0 10px #00FFFF;
 }
 .cta-button {
     display: inline-block;
@@ -136,4 +134,84 @@ footer {
     padding: 20px 0;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     color: #AAAAAA;
+}
+
+/* -----------------------
+   Left-side project panel
+   ----------------------- */
+#left-panel {
+    position: fixed;
+    left: 18px;
+    top: 18px;
+    bottom: 18px;
+    width: 260px;
+    max-width: 30%;
+    background: linear-gradient(180deg, rgba(3,6,12,0.75), rgba(6,9,14,0.6));
+    border: 1px solid rgba(255,255,255,0.04);
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    z-index: 40;
+    overflow: hidden;
+    backdrop-filter: blur(6px);
+}
+
+#projects-scroll {
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.project-banner {
+    background: linear-gradient(90deg, rgba(10,14,20,0.6), rgba(6,8,14,0.5));
+    border: 1px solid rgba(255,255,255,0.04);
+    padding: 14px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #dfefff;
+    text-align: left;
+    transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+    pointer-events: auto;
+}
+.project-banner:hover {
+    transform: translateX(6px) scale(1.01);
+    box-shadow: 0 8px 28px rgba(0,160,255,0.08);
+}
+.project-banner.active {
+    border-left: 4px solid #00FFFF;
+    box-shadow: 0 14px 50px rgba(10,180,255,0.12);
+}
+
+/* cinematic right-side info */
+.cinematic-info {
+    right: 24px;
+    top: 24px;
+    width: 360px;
+    max-width: calc(100% - 48px);
+    background: linear-gradient(180deg, rgba(8,10,16,0.94), rgba(6,8,14,0.9));
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 18px;
+    border-radius: 14px;
+    color: #e8f0ff;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 18px 60px rgba(0,0,0,0.75);
+    z-index: 50;
+}
+
+/* hide original in-page project-list if present */
+.visually-hidden { display: none !important; }
+
+/* ensure canvas sits behind the panels */
+canvas { z-index: 1; }
+
+/* make content overlay still clickable, but panels above it */
+#content-overlay { z-index: 20; pointer-events: none; }
+#content-overlay a, #content-overlay button { pointer-events: auto; }
+
+/* small responsive tweak */
+@media (max-width: 900px) {
+    #left-panel { display: none; } /* hide left panel on small screens */
+    .cinematic-info { width: calc(100% - 32px); right: 16px; left: 16px; top: auto; bottom: 16px; }
 }
