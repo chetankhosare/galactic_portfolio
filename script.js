@@ -1,19 +1,18 @@
 // script.js
-// Uses global THREE + OrbitControls from the included CDN scripts
+// Uses global THREE + OrbitControls from CDN
 const THREE = window.THREE;
 const OrbitControls = THREE.OrbitControls;
 
-// --- 1. SETUP SCENE, CAMERA, RENDERER ---
+// --- Basic scene setup ---
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 scene.background = new THREE.Color(0x000008);
 
-// --- 2. ADD CONTROLS ---
+// Controls
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
@@ -21,57 +20,110 @@ controls.minDistance = 2;
 controls.maxDistance = 60;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.5;
-
 camera.position.set(0, 5, 10);
 
-// Interaction
+// Interaction helpers
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 let selectedHelper = null;
 
-// Overlay elements
-const infoOverlay = document.getElementById('info-overlay');
-const infoTitle = document.getElementById('info-title');
-const infoSubtitle = document.getElementById('info-subtitle');
-const infoDesc = document.getElementById('info-desc');
-const infoClose = document.getElementById('info-close');
+// HUD elements
+const hud = document.getElementById('hud');
+const hudInner = document.getElementById('hud-inner');
+const hudClose = document.getElementById('hud-close');
 
-function showInfo(data) {
-    infoTitle.textContent = data.title || 'Unknown';
-    infoSubtitle.textContent = data.subtitle || '';
-    infoDesc.textContent = data.desc || '';
-    infoOverlay.classList.remove('hidden');
-}
-infoClose.addEventListener('click', () => infoOverlay.classList.add('hidden'));
+const hudName = document.getElementById('hud-name');
+const hudType = document.getElementById('hud-type');
+const hudDistance = document.getElementById('hud-distance');
+const hudTemp = document.getElementById('hud-temp');
+const hudCompA = document.getElementById('hud-comp-a');
+const hudCompB = document.getElementById('hud-comp-b');
+const hudDescText = document.getElementById('hud-desc-text');
+const hudScan = document.getElementById('hud-scan');
 
-// --- Camera tween helper ---
-let cameraTween = null;
-function tweenCamera(toPos, toTarget = null, duration = 1000, onComplete) {
-    const fromPos = camera.position.clone();
-    const fromTarget = controls.target.clone();
+hudClose.addEventListener('click', () => hideHUD(true));
+
+// Helper: animate numeric counters (simple tween)
+function animateNumber(element, from, to, duration = 900, fixed = 0) {
     const start = performance.now();
-    controls.enabled = false;
-
-    cameraTween = function animateTween(time) {
-        const t = Math.min(1, (time - start) / duration);
+    function frame(now) {
+        const t = Math.min(1, (now - start) / duration);
         const e = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // easeInOutQuad
-        camera.position.lerpVectors(fromPos, toPos, e);
-        if (toTarget) {
-            const targetVec = new THREE.Vector3().lerpVectors(fromTarget, toTarget, e);
-            controls.target.copy(targetVec);
-        }
-        controls.update();
-        if (t < 1) requestAnimationFrame(cameraTween);
-        else {
-            cameraTween = null;
-            controls.enabled = true;
-            if (onComplete) onComplete();
-        }
-    };
-    requestAnimationFrame(cameraTween);
+        const value = from + (to - from) * e;
+        element.textContent = value.toFixed(fixed);
+        if (t < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
 }
 
-// --- 3. GALAXY PARAMETERS & GENERATION ---
+// HUD show/hide with small scan animation
+let scanProgress = 0;
+let scanAnimId = null;
+function startScan() {
+    if (scanAnimId) cancelAnimationFrame(scanAnimId);
+    scanProgress = 0;
+    function step() {
+        scanProgress += 0.6; // percent per frame approx
+        hudScan.textContent = Math.min(100, Math.floor(scanProgress)) + '%';
+        if (scanProgress < 100) {
+            scanAnimId = requestAnimationFrame(step);
+        } else {
+            hudScan.textContent = '100%';
+            scanAnimId = null;
+        }
+    }
+    scanAnimId = requestAnimationFrame(step);
+}
+function stopScan() {
+    if (scanAnimId) cancelAnimationFrame(scanAnimId);
+    scanAnimId = null;
+    hudScan.textContent = '0%';
+}
+
+function showHUD(data) {
+    // populate
+    hudName.textContent = data.title || data.name || 'UNKNOWN';
+    hudType.textContent = data.type || data.subtitle || 'UNKNOWN';
+    hudDescText.textContent = data.desc || 'No additional description provided.';
+    // animate numbers (use random/fake if not provided)
+    const distanceVal = (data.distance !== undefined) ? Number(data.distance) : (Math.floor(5000 + Math.random() * 95000));
+    const tempVal = (data.temperature !== undefined) ? Number(data.temperature) : Math.floor(2000 + Math.random() * 9000);
+    const compAVal = (data.compA !== undefined) ? Number(data.compA) : +(10 + Math.random() * 80).toFixed(2);
+    const compBVal = (data.compB !== undefined) ? Number(data.compB) : +(Math.random() * 40).toFixed(2);
+
+    animateNumber(hudDistance, 0, distanceVal, 900, 0);
+    animateNumber(hudTemp, 0, tempVal, 900, 0);
+    animateNumber(hudCompA, 0, compAVal, 900, 2);
+    animateNumber(hudCompB, 0, compBVal, 900, 2);
+
+    // show panel with animation
+    hud.classList.remove('hidden');
+    // force reflow then add show so CSS transitions play
+    void hudInner.offsetWidth;
+    hud.classList.add('show');
+    hudInner.style.opacity = '1';
+    startScan();
+}
+
+function hideHUD(immediate = false) {
+    // hide with animation
+    if (immediate) {
+        stopScan();
+        hud.classList.remove('show');
+        hud.classList.add('hidden');
+        hudInner.style.opacity = '0';
+    } else {
+        hud.classList.remove('show');
+        stopScan();
+        // after transition hide
+        setTimeout(() => {
+            hud.classList.add('hidden');
+            hudInner.style.opacity = '0';
+        }, 380);
+    }
+}
+
+// --- galaxy generation (same as before) ---
 const parameters = {
     count: 350000,
     radius: 5,
@@ -98,7 +150,6 @@ function generateGalaxy() {
         material.dispose();
         scene.remove(points);
     }
-
     geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(parameters.count * 3);
     const colors = new Float32Array(parameters.count * 3);
@@ -119,14 +170,10 @@ function generateGalaxy() {
         positions[i3] = x + randomX;
         positions[i3 + 1] = y + randomY;
         positions[i3 + 2] = z + randomZ;
-
         const mixedColor = tempColor.copy(insideColor);
         mixedColor.lerp(outsideColor, radius / parameters.radius);
-
         const saturationFactor = 1 - (radius / parameters.radius);
-        if (saturationFactor > 0.9) {
-            mixedColor.lerp(new THREE.Color(0xFFFFFF), (saturationFactor - 0.9) / 0.1);
-        }
+        if (saturationFactor > 0.9) mixedColor.lerp(new THREE.Color(0xFFFFFF), (saturationFactor - 0.9) / 0.1);
 
         colors[i3] = mixedColor.r;
         colors[i3 + 1] = mixedColor.g;
@@ -152,7 +199,6 @@ function generateStarField() {
     const starCount = 10000;
     const starGeometry = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
-
     for (let i = 0; i < starCount; i++) {
         const i3 = i * 3;
         const starRadius = 50;
@@ -160,9 +206,7 @@ function generateStarField() {
         starPositions[i3 + 1] = (Math.random() - 0.5) * starRadius * 2;
         starPositions[i3 + 2] = (Math.random() - 0.5) * starRadius * 2;
     }
-
     starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-
     const starMaterial = new THREE.PointsMaterial({
         color: 0xAAAAAA,
         size: 0.05,
@@ -170,7 +214,6 @@ function generateStarField() {
         blending: THREE.AdditiveBlending,
         depthWrite: false
     });
-
     starField = new THREE.Points(starGeometry, starMaterial);
     scene.add(starField);
 }
@@ -178,7 +221,7 @@ function generateStarField() {
 generateGalaxy();
 generateStarField();
 
-// --- 4. ANCHOR ASSIGNMENT (worker or fallback) ---
+// --- Anchor assignment (worker fallback) ---
 function computeTargetPositionForProject(index, total) {
     const t = index / total;
     const branch = index % parameters.branches;
@@ -191,7 +234,6 @@ function computeTargetPositionForProject(index, total) {
     return new THREE.Vector3(x, y, z);
 }
 
-// single-thread nearest (used as fallback)
 function findNearestParticleTo(pos) {
     const posAttr = geometry.getAttribute('position');
     let bestIndex = 0;
@@ -284,7 +326,7 @@ if (geometry) {
     }
 }
 
-// --- 5. ANIMATION LOOP ---
+// --- Animation loop ---
 const clock = new THREE.Clock();
 function animate() {
     const elapsedTime = clock.getElapsedTime();
@@ -298,7 +340,7 @@ function animate() {
 }
 animate();
 
-// --- 6. RESIZE ---
+// --- Resize ---
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -306,13 +348,12 @@ window.addEventListener('resize', () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 });
 
-// --- 7. POINTER HELPERS ---
+// --- Picking utilities ---
 function getPointer(event) {
     if (event.touches && event.touches.length > 0) return { x: event.touches[0].clientX, y: event.touches[0].clientY };
     return { x: event.clientX, y: event.clientY };
 }
 
-// Advanced picking: nearest particle to mouse ray (fast subsample + refine)
 function findNearestParticleToRay(rayOrigin, rayDir, sampleStep = Math.max(1, Math.floor(geometry.getAttribute('position').count / 150000)), maxPerpDist = 0.6) {
     const posAttr = geometry.getAttribute('position');
     const count = posAttr.count;
@@ -404,26 +445,20 @@ function createBeamFromCardToAnchor(card, anchorPos) {
         try { activeBeam.geometry.dispose(); activeBeam.material.dispose(); } catch (e) {}
         activeBeam = null;
     }
-
     const rect = card.getBoundingClientRect();
     const screenX = rect.left + rect.width / 2;
     const screenY = rect.top + rect.height / 2;
-
     const from = getWorldPointFromScreen(screenX, screenY, 1.2);
     const to = anchorPos.clone();
-
     const positions = new Float32Array([from.x, from.y, from.z, to.x, to.y, to.z]);
     const geom = new THREE.BufferGeometry();
     geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
     const mat = new THREE.LineBasicMaterial({ color: 0x6ad3ff, transparent: true, opacity: 0.0 });
     const line = new THREE.Line(geom, mat);
     scene.add(line);
     activeBeam = line;
-
     const fadeIn = 250, hold = 900, fadeOut = 600;
     const start = performance.now();
-
     function animateBeam(time) {
         const elapsed = time - start;
         if (!activeBeam) return;
@@ -444,45 +479,163 @@ function createBeamFromCardToAnchor(card, anchorPos) {
     requestAnimationFrame(animateBeam);
 }
 
-// Pointer down handler (mouse/touch) -> pick nearest particle to mouse-ray
+// --- Input: left-select, middle-drag pan, right-deselect, wheel-orbit ---
+function getPointerEventCoords(event) {
+    if (event.touches && event.touches.length > 0) return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    return { x: event.clientX, y: event.clientY };
+}
+
+let isMiddleDown = false;
+let middleLast = { x: 0, y: 0 };
+const PAN_SPEED = 0.0025;
+
 function onPointerDown(event) {
-    const p = getPointer(event);
-    pointer.x = (p.x / window.innerWidth) * 2 - 1;
-    pointer.y = -(p.y / window.innerHeight) * 2 + 1;
+    const isTouch = event.pointerType === 'touch' || event.type === 'touchstart';
+    const button = (isTouch ? 0 : (event.button === undefined ? 0 : event.button));
 
-    if (!points || !geometry) return;
+    // middle start
+    if (button === 1) {
+        isMiddleDown = true;
+        const p = getPointerEventCoords(event);
+        middleLast.x = p.x;
+        middleLast.y = p.y;
+        controls.autoRotate = false;
+        return;
+    }
 
-    const { origin, dir } = getRayFromPointer(p.x, p.y);
-    const hit = findNearestParticleToRay(origin, dir);
+    // right deselect
+    if (button === 2) {
+        if (selectedHelper) {
+            scene.remove(selectedHelper);
+            try { selectedHelper.geometry.dispose(); selectedHelper.material.dispose(); } catch (e) {}
+            selectedHelper = null;
+        }
+        hideHUD(true);
+        return;
+    }
 
-    if (hit) {
-        const idx = hit.index;
-        const pos = hit.position;
+    // left select
+    if (button === 0) {
+        const p = getPointerEventCoords(event);
+        pointer.x = (p.x / window.innerWidth) * 2 - 1;
+        pointer.y = -(p.y / window.innerHeight) * 2 + 1;
+        if (!points || !geometry) return;
 
-        if (selectedHelper) scene.remove(selectedHelper);
-        const helperGeom = new THREE.SphereGeometry(0.08, 8, 8);
-        const helperMat = new THREE.MeshBasicMaterial({ color: 0xffee88 });
-        selectedHelper = new THREE.Mesh(helperGeom, helperMat);
-        selectedHelper.position.copy(pos);
-        scene.add(selectedHelper);
+        const { origin, dir } = getRayFromPointer(p.x, p.y);
+        const hit = findNearestParticleToRay(origin, dir);
 
-        const camDir = camera.position.clone().sub(pos).normalize();
-        const desiredCamPos = pos.clone().add(camDir.multiplyScalar(2.2));
-        tweenCamera(desiredCamPos, pos.clone(), 1000);
+        if (hit) {
+            const idx = hit.index;
+            const pos = hit.position;
 
-        const fakeData = {
-            title: 'Star Node ' + idx,
-            subtitle: 'Cinematic Contact Point',
-            desc: 'You have discovered a dense star cluster node. Visuals: lens flares, atmospheric scan, and an encrypted transmission hinting at a lost colony.'
-        };
-        showInfo(fakeData);
-    } else {
-        tweenCamera(new THREE.Vector3(0, 1.5, 3), null, 700);
+            if (selectedHelper) {
+                scene.remove(selectedHelper);
+                try { selectedHelper.geometry.dispose(); selectedHelper.material.dispose(); } catch (e) {}
+            }
+            const helperGeom = new THREE.SphereGeometry(0.08, 8, 8);
+            const helperMat = new THREE.MeshBasicMaterial({ color: 0xffee88 });
+            selectedHelper = new THREE.Mesh(helperGeom, helperMat);
+            selectedHelper.position.copy(pos);
+            scene.add(selectedHelper);
+
+            const camDir = camera.position.clone().sub(pos).normalize();
+            const desiredCamPos = pos.clone().add(camDir.multiplyScalar(2.2));
+            tweenCamera(desiredCamPos, pos.clone(), 1000);
+
+            // show cinematic HUD populated from banner if available, otherwise use generated/fake
+            const fakeData = {
+                title: 'Star Node ' + idx,
+                type: 'Cinematic Contact Point',
+                distance: Math.floor(5000 + Math.random() * 90000),
+                temperature: Math.floor(1000 + Math.random() * 10000),
+                compA: +(10 + Math.random() * 70).toFixed(2),
+                compB: +(Math.random() * 30).toFixed(2),
+                desc: 'You have discovered a dense star cluster node — scanned and analyzed.'
+            };
+            showHUD(fakeData);
+        } else {
+            tweenCamera(new THREE.Vector3(0, 1.5, 3), null, 700);
+        }
     }
 }
-renderer.domElement.addEventListener('pointerdown', onPointerDown);
 
-// Banner click behavior: zoom to precomputed anchor or compute nearest on demand
+function onPointerMove(event) {
+    if (!isMiddleDown) return;
+    const p = getPointerEventCoords(event);
+    const dx = p.x - middleLast.x;
+    const dy = p.y - middleLast.y;
+    middleLast.x = p.x;
+    middleLast.y = p.y;
+
+    const offset = camera.position.clone().sub(controls.target);
+    const targetDistance = offset.length();
+    const panX = -dx * PAN_SPEED * targetDistance;
+    const panY = dy * PAN_SPEED * targetDistance;
+
+    const cameraMatrix = new THREE.Matrix4().extractRotation(camera.matrix);
+    const right = new THREE.Vector3(1, 0, 0).applyMatrix4(cameraMatrix).normalize();
+    const up = new THREE.Vector3(0, 1, 0).applyMatrix4(cameraMatrix).normalize();
+
+    const panOffset = new THREE.Vector3();
+    panOffset.addScaledVector(right, panX);
+    panOffset.addScaledVector(up, panY);
+
+    controls.target.add(panOffset);
+    camera.position.add(panOffset);
+    controls.update();
+}
+
+function onPointerUp(event) {
+    const isTouch = event.pointerType === 'touch' || event.type === 'touchend';
+    const button = (isTouch ? 0 : (event.button === undefined ? 0 : event.button));
+    if (button === 1) {
+        isMiddleDown = false;
+    }
+}
+
+function onContextMenu(evt) {
+    const path = evt.composedPath ? evt.composedPath() : (evt.path || []);
+    for (const el of path) {
+        if (!el) continue;
+        if (el.id === 'left-panel' || el.id === 'projects-scroll' || el.id === 'hud' || (el.classList && el.classList.contains('project-banner'))) {
+            return;
+        }
+    }
+    evt.preventDefault();
+}
+
+renderer.domElement.addEventListener('pointerdown', onPointerDown);
+window.addEventListener('pointermove', onPointerMove);
+window.addEventListener('pointerup', onPointerUp);
+renderer.domElement.addEventListener('contextmenu', onContextMenu);
+
+// --- Camera tween helper ---
+let cameraTween = null;
+function tweenCamera(toPos, toTarget = null, duration = 1000, onComplete) {
+    const fromPos = camera.position.clone();
+    const fromTarget = controls.target.clone();
+    const start = performance.now();
+    controls.enabled = false;
+    cameraTween = function animateTween(time) {
+        const t = Math.min(1, (time - start) / duration);
+        const e = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        camera.position.lerpVectors(fromPos, toPos, e);
+        if (toTarget) {
+            const targetVec = new THREE.Vector3().lerpVectors(fromTarget, toTarget, e);
+            controls.target.copy(targetVec);
+        }
+        controls.update();
+        if (t < 1) requestAnimationFrame(cameraTween);
+        else {
+            cameraTween = null;
+            controls.enabled = true;
+            if (onComplete) onComplete();
+        }
+    };
+    requestAnimationFrame(cameraTween);
+}
+
+// --- Banner click behavior (uses anchors if present) ---
 const bannerCards = document.querySelectorAll('.project-banner');
 bannerCards.forEach((card) => {
     card.addEventListener('click', () => {
@@ -492,6 +645,13 @@ bannerCards.forEach((card) => {
         const ax = parseFloat(card.dataset.anchorX);
         const ay = parseFloat(card.dataset.anchorY);
         const az = parseFloat(card.dataset.anchorZ);
+
+        // Build HUD data from banner
+        const bannerData = {
+            title: card.dataset.title || card.textContent.trim(),
+            type: card.dataset.subtitle || '',
+            desc: card.dataset.desc || ''
+        };
 
         if (!isNaN(ax) && !isNaN(ay) && !isNaN(az)) {
             const anchorPos = new THREE.Vector3(ax, ay, az);
@@ -505,15 +665,14 @@ bannerCards.forEach((card) => {
                 selectedHelper.position.copy(anchorPos);
                 scene.add(selectedHelper);
             });
-
             createBeamFromCardToAnchor(card, anchorPos);
 
-            const data = {
-                title: card.dataset.title || 'Project',
-                subtitle: card.dataset.subtitle || '',
-                desc: card.dataset.desc || ''
-            };
-            setTimeout(() => showInfo(data), 650);
+            // populate HUD values (banner gives title/subtitle/desc; numbers can be faked until real data present)
+            bannerData.distance = Math.floor(5000 + Math.random() * 90000);
+            bannerData.temperature = Math.floor(1500 + Math.random() * 9000);
+            bannerData.compA = +(10 + Math.random() * 60).toFixed(2);
+            bannerData.compB = +(Math.random() * 35).toFixed(2);
+            setTimeout(() => showHUD(bannerData), 650);
             return;
         }
 
@@ -541,20 +700,85 @@ bannerCards.forEach((card) => {
             });
 
             createBeamFromCardToAnchor(card, anchorPos);
-
-            const data = {
-                title: card.dataset.title || 'Project',
-                subtitle: card.dataset.subtitle || '',
-                desc: card.dataset.desc || ''
-            };
-            setTimeout(() => showInfo(data), 650);
+            bannerData.distance = Math.floor(5000 + Math.random() * 90000);
+            bannerData.temperature = Math.floor(1500 + Math.random() * 9000);
+            bannerData.compA = +(10 + Math.random() * 60).toFixed(2);
+            bannerData.compB = +(Math.random() * 35).toFixed(2);
+            setTimeout(() => showHUD(bannerData), 650);
         } else {
             tweenCamera(new THREE.Vector3(0, 1.5, 3), null, 700);
-            setTimeout(() => showInfo({
-                title: card.dataset.title || 'Project',
-                subtitle: card.dataset.subtitle || '',
-                desc: card.dataset.desc || ''
-            }), 600);
+            setTimeout(() => showHUD(bannerData), 600);
         }
     });
+});
+
+// --- Wheel orbit (same as before) ---
+let wheelVelocity = 0;
+const WHEEL_SENSITIVITY = 0.0016;
+const WHEEL_PHI_SENS = 0.0008;
+const WHEEL_DAMPING = 0.92;
+
+function isOverUI(evt) {
+    const path = evt.composedPath ? evt.composedPath() : (evt.path || []);
+    if (path && path.length) {
+        for (const el of path) {
+            if (!el || !el.classList) continue;
+            if (el.id === 'left-panel' || el.id === 'projects-scroll' || el.id === 'hud' || el.classList.contains('project-banner')) {
+                return true;
+            }
+        }
+    } else {
+        if (evt.target.closest && (evt.target.closest('#left-panel') || evt.target.closest('#hud'))) return true;
+    }
+    return false;
+}
+
+function onWheel(evt) {
+    if (isOverUI(evt)) return;
+    if (evt.ctrlKey) return; // Ctrl+wheel = zoom
+    evt.preventDefault();
+    wheelVelocity += (evt.deltaY) * WHEEL_SENSITIVITY;
+    applyWheelTilt((evt.deltaY > 0 ? 1 : -1) * WHEEL_PHI_SENS * 6);
+}
+
+function applyWheelTilt(deltaPhi) {
+    const target = controls.target.clone();
+    const offset = camera.position.clone().sub(target);
+    const spherical = new THREE.Spherical().setFromVector3(offset);
+    spherical.phi = THREE.MathUtils.clamp(spherical.phi + deltaPhi, 0.1, Math.PI - 0.1);
+    const newPos = new THREE.Vector3().setFromSpherical(spherical).add(target);
+    camera.position.copy(newPos);
+    controls.update();
+}
+
+function updateWheelOrbit() {
+    if (Math.abs(wheelVelocity) > 1e-5) {
+        const angle = wheelVelocity;
+        const target = controls.target.clone();
+        const offset = camera.position.clone().sub(target);
+        const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+        offset.applyQuaternion(q);
+        const spherical = new THREE.Spherical().setFromVector3(offset);
+        spherical.phi = THREE.MathUtils.clamp(spherical.phi + (wheelVelocity * 0.12), 0.2, Math.PI - 0.2);
+        const rotated = new THREE.Vector3().setFromSpherical(spherical);
+        camera.position.copy(rotated.add(target));
+        controls.update();
+        wheelVelocity *= WHEEL_DAMPING;
+    }
+    requestAnimationFrame(updateWheelOrbit);
+}
+updateWheelOrbit();
+renderer.domElement.addEventListener('wheel', onWheel, { passive: false });
+
+// --- Utility: show/hide HUD when window is resized or overlay overlaps ---
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        // Escape to close hud and deselect
+        if (selectedHelper) {
+            scene.remove(selectedHelper);
+            try { selectedHelper.geometry.dispose(); selectedHelper.material.dispose(); } catch (e) {}
+            selectedHelper = null;
+        }
+        hideHUD(true);
+    }
 });

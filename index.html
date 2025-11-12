@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Galactic Portfolio: [Your Name]</title>
 
     <link rel="stylesheet" href="style.css" />
 
-    <!-- three.js (r128) and OrbitControls (example) -->
+    <!-- three.js and controls -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
@@ -15,12 +15,11 @@
     <!-- Left-side scrollable project banner panel -->
     <aside id="left-panel" aria-label="Projects panel">
         <div id="projects-scroll">
-            <!-- Example banners: add/duplicate these for your projects -->
-            <div class="project-banner project-card" data-title="Stellar E-commerce" data-subtitle="A fast interstellar shop" data-desc="A full-stack e-commerce platform themed like a space bazaar. Built with performant servers and an eye for UX.">Stellar E-commerce</div>
-            <div class="project-banner project-card" data-title="Asteroid Analyzer" data-subtitle="Mining data from the belt" data-desc="A data analysis suite that visualizes asteroid trajectories and resource estimates with predictive models.">Asteroid Analyzer</div>
-            <div class="project-banner project-card" data-title="Orbit Visualizer" data-subtitle="Interactive orbital simulator" data-desc="An interactive simulator for visualizing orbital paths and maneuver planning.">Orbit Visualizer</div>
-            <div class="project-banner project-card" data-title="Nebula Studio" data-subtitle="Procedural art engine" data-desc="Generative artworks and shaders inspired by nebulae and volumetric clouds.">Nebula Studio</div>
-            <!-- Add more banners as needed -->
+            <div class="project-banner project-card" data-title="Stellar E-commerce" data-subtitle="Interstellar Shop" data-desc="A full-stack e-commerce platform themed like a space bazaar.">Stellar E-commerce</div>
+            <div class="project-banner project-card" data-title="Asteroid Analyzer" data-subtitle="Mining the Belt" data-desc="A data analysis suite that visualizes asteroid trajectories and resource estimates.">Asteroid Analyzer</div>
+            <div class="project-banner project-card" data-title="Orbit Visualizer" data-subtitle="Orbital Simulator" data-desc="Interactive orbital paths and maneuver planning.">Orbit Visualizer</div>
+            <div class="project-banner project-card" data-title="Nebula Studio" data-subtitle="Generative Art Engine" data-desc="Procedural artworks inspired by nebulae and volumetric clouds.">Nebula Studio</div>
+            <!-- duplicate banners as needed -->
         </div>
     </aside>
 
@@ -42,9 +41,7 @@
 
             <section id="projects">
                 <h2>Galactic Projects</h2>
-                <div class="project-list visually-hidden">
-                    <!-- kept for compatibility if you want the original inline cards; they are hidden now -->
-                </div>
+                <div class="project-list visually-hidden"></div>
             </section>
 
             <section id="contact">
@@ -58,14 +55,61 @@
         </footer>
     </div>
 
-    <!-- Info overlay shown when a particle or project is selected (right-side cinematic info) -->
-    <div id="info-overlay" class="hidden cinematic-info">
-        <button id="info-close" aria-label="Close">×</button>
-        <div id="info-content">
-            <h3 id="info-title">Title</h3>
-            <h4 id="info-subtitle">Subtitle</h4>
-            <p id="info-desc">Description</p>
-            <div id="info-meta">Movie-style credits and visuals will go here.</div>
+    <!-- Cinematic HUD (right-side) -->
+    <div id="hud" class="hidden">
+        <button id="hud-close" aria-label="Close hud">×</button>
+
+        <div id="hud-inner">
+            <div id="hud-left">
+                <div class="scanner-wrap">
+                    <svg class="scanner" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                        <defs>
+                            <radialGradient id="g1" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#9ef3ff" stop-opacity="0.9"/>
+                                <stop offset="60%" stop-color="#1fb6ff" stop-opacity="0.25"/>
+                                <stop offset="100%" stop-color="#0d2b4a" stop-opacity="0.05"/>
+                            </radialGradient>
+                        </defs>
+                        <circle cx="100" cy="100" r="60" fill="url(#g1)"/>
+                        <g class="scan-rings" stroke="#6ff0ff" stroke-opacity="0.65" stroke-width="1" fill="none">
+                            <circle cx="100" cy="100" r="70"/>
+                            <circle cx="100" cy="100" r="84"/>
+                            <circle cx="100" cy="100" r="96"/>
+                        </g>
+                        <circle class="scan-dot" cx="100" cy="40" r="4" fill="#bafaff" opacity="0.95"></circle>
+                    </svg>
+                </div>
+            </div>
+
+            <div id="hud-right">
+                <div id="hud-title">CELESTIAL ANOMALY: <span id="hud-name">UNKNOWN</span></div>
+                <div id="hud-sub">TYPE: <span id="hud-type">UNKNOWN</span></div>
+
+                <div class="hud-row">
+                    <div class="hud-label">DISTANCE</div>
+                    <div class="hud-value"><span id="hud-distance">0</span> ly</div>
+                </div>
+
+                <div class="hud-row">
+                    <div class="hud-label">TEMPERATURE</div>
+                    <div class="hud-value"><span id="hud-temp">0</span> K</div>
+                </div>
+
+                <div class="hud-row split">
+                    <div>
+                        <div class="hud-label small">COMPOSITION A</div>
+                        <div class="hud-value small"><span id="hud-comp-a">0</span>%</div>
+                    </div>
+                    <div>
+                        <div class="hud-label small">COMPOSITION B</div>
+                        <div class="hud-value small"><span id="hud-comp-b">0</span>%</div>
+                    </div>
+                </div>
+
+                <div id="hud-desc"> <em id="hud-desc-text">Description goes here.</em> </div>
+
+                <div id="hud-meta">scan: <span id="hud-scan">0%</span></div>
+            </div>
         </div>
     </div>
 
