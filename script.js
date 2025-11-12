@@ -709,7 +709,7 @@ renderer.domElement.addEventListener('wheel', (event) => {
     // Zoom speed: tweak zoomSpeed for feel
     const zoomSpeed = 0.0035;
     // delta sign: wheel down (positive) => move forward (zoom in), typical mice vary; keep consistent by using deltaY
-    const delta = event.deltaY * zoomSpeed;
+    const delta = -event.deltaY * zoomSpeed;
 
     // direction camera is looking
     const dir = new THREE.Vector3();
