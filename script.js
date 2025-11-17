@@ -208,6 +208,188 @@ function generateStarField() {
 generateGalaxy();
 generateStarField();
 
+// --- Meteor shower effect: longer tapered tails ---
+// tuned: very long tail, thinner head, tail stretched by velocity for cinematic streaks
+const meteorParams = {
+    spawnRate: 3.5,        // meteors per second
+    burstChance: 0.08,
+    minSpeed: 10.0,
+    maxSpeed: 30.0,
+    headSize: 0.04,          // smaller head than before
+    tailLength: 120,         // long tail
+    tailSegSpacing: 0.12,    // spacing factor used with speed to stretch
+    areaRadius: 60,
+    elevationMin: -5,
+    elevationMax: 40,
+    color: 0xFFFFFF
+};
+
+const meteorGroup = new THREE.Group();
+scene.add(meteorGroup);
+
+const meteors = [];
+
+function spawnMeteor(burst = false) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = meteorParams.areaRadius * (0.45 + Math.random() * 0.55);
+    const height = meteorParams.elevationMin + Math.random() * (meteorParams.elevationMax - meteorParams.elevationMin);
+
+    const spawnX = camera.position.x + Math.cos(angle) * radius + (Math.random() - 0.5) * 12;
+    const spawnY = camera.position.y + height + 5;
+    const spawnZ = camera.position.z + Math.sin(angle) * radius + (Math.random() - 0.5) * 12;
+    const spawn = new THREE.Vector3(spawnX, spawnY, spawnZ);
+
+    const targetX = camera.position.x + (Math.random() - 0.5) * 10;
+    const targetY = camera.position.y - (12 + Math.random() * 40);
+    const targetZ = camera.position.z + (Math.random() - 0.5) * 10;
+    const dir = new THREE.Vector3(targetX - spawnX, targetY - spawnY, targetZ - spawnZ).normalize();
+
+    const speed = meteorParams.minSpeed + Math.random() * (meteorParams.maxSpeed - meteorParams.minSpeed);
+    const velocity = dir.clone().multiplyScalar(speed * (burst ? 1.6 : 1.0));
+
+    // head (small bright sphere)
+    const headGeom = new THREE.SphereGeometry(meteorParams.headSize, 8, 8);
+    const headMat = new THREE.MeshBasicMaterial({ color: meteorParams.color });
+    const head = new THREE.Mesh(headGeom, headMat);
+    head.position.copy(spawn);
+
+    // tail as a long line (vertex colors used to fade)
+    const tailLen = meteorParams.tailLength;
+    const tailPositions = new Float32Array(tailLen * 3);
+    const tailColors = new Float32Array(tailLen * 3);
+    for (let i = 0; i < tailLen; i++) {
+        tailPositions[i * 3] = spawn.x;
+        tailPositions[i * 3 + 1] = spawn.y;
+        tailPositions[i * 3 + 2] = spawn.z;
+        const t = 1 - i / tailLen;
+        // sharper falloff for a tapered look
+        const intensity = Math.pow(t, 2.6);
+        tailColors[i * 3] = intensity;
+        tailColors[i * 3 + 1] = intensity;
+        tailColors[i * 3 + 2] = intensity;
+    }
+    const tailGeom = new THREE.BufferGeometry();
+    tailGeom.setAttribute('position', new THREE.BufferAttribute(tailPositions, 3));
+    tailGeom.setAttribute('color', new THREE.BufferAttribute(tailColors, 3));
+    const tailMat = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.95,
+    });
+    const tail = new THREE.Line(tailGeom, tailMat);
+
+    const meteorObj = {
+        head,
+        tail,
+        velocity,
+        velNorm: velocity.clone().normalize(),
+        speed: velocity.length(),
+        age: 0,
+        life: 3.0 + Math.random() * 3.5,
+        tailLen
+    };
+
+    meteorGroup.add(head);
+    meteorGroup.add(tail);
+    meteors.push(meteorObj);
+}
+
+let _meteorSpawnAccumulator = 0;
+function updateMeteors(delta) {
+    _meteorSpawnAccumulator += delta * meteorParams.spawnRate;
+    while (_meteorSpawnAccumulator > 1) {
+        _meteorSpawnAccumulator -= 1;
+        if (Math.random() < meteorParams.burstChance) {
+            const burstCount = 2 + Math.floor(Math.random() * 4);
+            for (let i = 0; i < burstCount; i++) spawnMeteor(true);
+        } else {
+            spawnMeteor(false);
+        }
+    }
+
+    for (let i = meteors.length - 1; i >= 0; i--) {
+        const m = meteors[i];
+        m.age += delta;
+
+        // integrate head
+        m.head.position.x += m.velocity.x * delta;
+        m.head.position.y += m.velocity.y * delta;
+        m.head.position.z += m.velocity.z * delta;
+
+        // produce a stretched straight tail behind head using velocity direction and spacing
+        const posAttr = m.tail.geometry.getAttribute('position');
+        const positions = posAttr.array;
+        const spacingFactor = meteorParams.tailSegSpacing * (m.speed * 0.06); // speed scales stretch
+        const nx = m.velNorm.x * spacingFactor;
+        const ny = m.velNorm.y * spacingFactor;
+        const nz = m.velNorm.z * spacingFactor;
+
+        // fill positions: 0 is head, further indices go further behind head
+        for (let s = 0; s < m.tailLen; s++) {
+            const px = m.head.position.x - nx * s;
+            const py = m.head.position.y - ny * s;
+            const pz = m.head.position.z - nz * s;
+            positions[s * 3] = px;
+            positions[s * 3 + 1] = py;
+            positions[s * 3 + 2] = pz;
+        }
+        posAttr.needsUpdate = true;
+
+        // update color taper (stronger taper for long tails)
+        const colorAttr = m.tail.geometry.getAttribute('color');
+        const cols = colorAttr.array;
+        for (let s = 0; s < m.tailLen; s++) {
+            const t = 1 - s / m.tailLen;
+            const intensity = Math.pow(t, 2.8);
+            cols[s * 3] = intensity;
+            cols[s * 3 + 1] = intensity;
+            cols[s * 3 + 2] = intensity;
+        }
+        colorAttr.needsUpdate = true;
+
+        // small head pulse
+        const lifePct = m.age / m.life;
+        m.head.scale.setScalar(1 + (1 - lifePct) * 0.45);
+
+        // cleanup conditions
+        const cameraDist = m.head.position.distanceTo(camera.position);
+        if (m.age > m.life || cameraDist > 1200 || m.head.position.y < -300) {
+            meteorGroup.remove(m.head);
+            meteorGroup.remove(m.tail);
+            try { m.head.geometry.dispose(); m.head.material.dispose(); } catch (e) {}
+            try { m.tail.geometry.dispose(); m.tail.material.dispose(); } catch (e) {}
+            meteors.splice(i, 1);
+        }
+    }
+
+    // cap total meteors to keep performance stable
+    const maxMeteors = 28;
+    while (meteors.length > maxMeteors) {
+        const m = meteors.shift();
+        meteorGroup.remove(m.head);
+        meteorGroup.remove(m.tail);
+        try { m.head.geometry.dispose(); m.head.material.dispose(); } catch (e) {}
+        try { m.tail.geometry.dispose(); m.tail.material.dispose(); } catch (e) {}
+    }
+}
+
+let meteorsEnabled = true;
+function setMeteorEnabled(v) {
+    meteorsEnabled = !!v;
+    if (!meteorsEnabled) {
+        while (meteors.length) {
+            const m = meteors.pop();
+            meteorGroup.remove(m.head);
+            meteorGroup.remove(m.tail);
+            try { m.head.geometry.dispose(); m.head.material.dispose(); } catch (e) {}
+            try { m.tail.geometry.dispose(); m.tail.material.dispose(); } catch (e) {}
+        }
+    }
+}
+
+// initial burst so you see the effect immediately
+for (let i = 0; i < 6; i++) spawnMeteor(true);
+
 // --- Anchor assignment (worker fallback) ---
 function computeTargetPositionForProject(index, total) {
     const t = index / total;
@@ -316,10 +498,14 @@ if (geometry) {
 // --- Animation loop ---
 const clock = new THREE.Clock();
 function animate() {
+    // advance clock first so delta is accurate
+    const delta = clock.getDelta();
     const elapsedTime = clock.getElapsedTime();
+
     requestAnimationFrame(animate);
     if (points) points.rotation.y = elapsedTime * 0.05;
     if (starField) starField.rotation.y = elapsedTime * 0.005;
+    if (meteorsEnabled) updateMeteors(delta);
     controls.update();
     renderer.render(scene, camera);
 }
@@ -468,18 +654,13 @@ function createBeamFromCardToAnchor(card, anchorPos) {
 }
 
 // --- Input handling: left-select, middle-drag pan, right-deselect, wheel zoom ---
-// Middle-pan state
 let isMiddleDown = false;
 let middleLast = { x: 0, y: 0 };
 const PAN_SPEED = 0.0025;
 
-// pointer down
 renderer.domElement.addEventListener('pointerdown', (event) => {
-    // prefer pointer event's button info; fallback for touch to left button behavior
     const isTouch = event.pointerType === 'touch' || event.type === 'touchstart';
     const button = (isTouch ? 0 : (event.button === undefined ? 0 : event.button));
-
-    // Middle button starts panning (button === 1)
     if (button === 1) {
         isMiddleDown = true;
         const p = getPointerCoords(event);
@@ -487,8 +668,6 @@ renderer.domElement.addEventListener('pointerdown', (event) => {
         controls.autoRotate = false;
         return;
     }
-
-    // Right button -> deselect and hide HUD (button === 2)
     if (button === 2) {
         if (selectedHelper) {
             scene.remove(selectedHelper);
@@ -498,8 +677,6 @@ renderer.domElement.addEventListener('pointerdown', (event) => {
         hideHUD(true);
         return;
     }
-
-    // Left button selection (button === 0)
     if (button === 0) {
         const p = getPointerCoords(event);
         if (!points || !geometry) return;
@@ -523,7 +700,6 @@ renderer.domElement.addEventListener('pointerdown', (event) => {
             const desiredCamPos = pos.clone().add(camDir.multiplyScalar(2.2));
             tweenCamera(desiredCamPos, pos.clone(), 1000);
 
-            // populate HUD from banner if available, otherwise fake data until you attach real data
             const fakeData = {
                 title: 'Star Node ' + idx,
                 type: 'Cinematic Contact Point',
@@ -540,7 +716,6 @@ renderer.domElement.addEventListener('pointerdown', (event) => {
     }
 });
 
-// pointer move (for middle-pan)
 window.addEventListener('pointermove', (event) => {
     if (!isMiddleDown) return;
     const p = getPointerCoords(event);
@@ -567,20 +742,18 @@ window.addEventListener('pointermove', (event) => {
     controls.update();
 });
 
-// pointer up
 window.addEventListener('pointerup', (event) => {
     const isTouch = event.pointerType === 'touch' || event.type === 'touchend';
     const button = (isTouch ? 0 : (event.button === undefined ? 0 : event.button));
     if (button === 1) isMiddleDown = false;
 });
 
-// prevent default context menu on canvas, but allow on UI elements
 renderer.domElement.addEventListener('contextmenu', (evt) => {
     const path = evt.composedPath ? evt.composedPath() : (evt.path || []);
     for (const el of path) {
         if (!el) continue;
         if (el.id === 'left-panel' || el.id === 'projects-scroll' || el.id === 'hud' || (el.classList && el.classList.contains('project-banner'))) {
-            return; // allow default on UI
+            return;
         }
     }
     evt.preventDefault();
@@ -644,7 +817,6 @@ bannerCards.forEach((card) => {
 
             createBeamFromCardToAnchor(card, anchorPos);
 
-            // fake numeric values for now
             bannerData.distance = Math.floor(5000 + Math.random() * 90000);
             bannerData.temperature = Math.floor(1500 + Math.random() * 9000);
             bannerData.compA = +(10 + Math.random() * 60).toFixed(2);
@@ -653,7 +825,6 @@ bannerCards.forEach((card) => {
             return;
         }
 
-        // fallback: compute deterministic target and find nearest particle
         const projectIndex = Array.from(bannerCards).indexOf(card);
         const total = bannerCards.length;
         const target = computeTargetPositionForProject(projectIndex, total);
@@ -690,38 +861,29 @@ bannerCards.forEach((card) => {
     });
 });
 
-// --- Scroll-wheel zoom (behaves like 3D software: zoom in/out along camera direction) ---
+// --- Scroll-wheel zoom ---
 renderer.domElement.addEventListener('wheel', (event) => {
-    // if wheel occurs over UI panel (left hud or hud), let UI handle scrolls
     const path = event.composedPath ? event.composedPath() : (event.path || []);
     for (const el of path) {
         if (!el) continue;
         if (el.id === 'left-panel' || el.id === 'projects-scroll' || el.id === 'hud' || (el.classList && el.classList.contains('project-banner'))) {
-            return; // allow UI to scroll normally
+            return;
         }
     }
 
-    // If Ctrl is pressed, allow browser/OrbitControls zoom default (so user can zoom via ctrl+wheel)
     if (event.ctrlKey) return;
 
-    event.preventDefault(); // we handle zoom here
+    event.preventDefault();
 
-    // Zoom speed: tweak zoomSpeed for feel
     const zoomSpeed = 0.0035;
-    // delta sign: wheel down (positive) => move forward (zoom in), typical mice vary; keep consistent by using deltaY
     const delta = -event.deltaY * zoomSpeed;
 
-    // direction camera is looking
     const dir = new THREE.Vector3();
     camera.getWorldDirection(dir);
 
-    // move camera along viewing direction by delta
-    // positive delta (scroll down) -> move camera forward (closer) => subtract
-    // to make intuitive: use sign invert as needed; here we apply directly
     const move = dir.multiplyScalar(delta);
     camera.position.add(move);
 
-    // clamp distance to [minDistance, maxDistance]
     const dist = camera.position.distanceTo(controls.target);
     if (dist < controls.minDistance) {
         const correction = camera.position.clone().sub(controls.target).normalize().multiplyScalar(controls.minDistance - dist);
