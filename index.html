@@ -1,65 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galactic Portfolio: [Your Name]</title>
-    
-    <link rel="stylesheet" href="style.css">
-    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Galactic Portfolio: Chetan Khosare</title>
+    <link rel="stylesheet" href="style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
-    
-    <div id="content-overlay">
-        
-        <header>
-            <nav>
-                <a href="#about">About</a>
-                <a href="#projects">Projects</a>
-                <a href="#contact">Contact</a>
-            </nav>
-        </header>
-        
-        <main>
-            <section id="hero">
-                <h1>**[Your Name]**</h1>
-                <p>Full Stack Developer | Creator of Digital Galaxies</p>
-                <a href="#projects" class="cta-button">View My Cosmos</a>
-            </section>
-            
-            <section id="projects">
-                <h2>Galactic Projects</h2>
-                <div class="project-list">
-                    <div class="project-card" data-title="Stellar E-commerce" data-subtitle="A fast interstellar shop" data-desc="A full-stack e-commerce platform themed like a space bazaar. Built with performant servers and an eye for UX.">Project 1: Stellar E-commerce Platform</div>
-                    <div class="project-card" data-title="Asteroid Analyzer" data-subtitle="Mining data from the belt" data-desc="A data analysis suite that visualizes asteroid trajectories and resource estimates with predictive models.">Project 2: Asteroid Data Analyzer</div>
-                </div>
-            </section>
 
-            <section id="contact">
-                <h2>Warp Speed Contact</h2>
-                <p>Email me at: orbit@[yourdomain].com</p>
-            </section>
-        </main>
-        
-        <footer>
-            <p>&copy; 2024 Galactic Portfolio</p>
-        </footer>
+    <div id="intro-overlay">
+        <div class="intro-card">
+            <div class="intro-header">
+                <h2>SYSTEM INTERFACE</h2>
+                <div class="intro-subtitle">FLIGHT CONTROLS ONLINE</div>
+            </div>
+            
+            <div class="controls-grid">
+                <div class="control-item">
+                    <div class="mouse-icon">
+                        <div class="mouse-body"></div>
+                        <div class="mouse-btn left active"></div>
+                    </div>
+                    <div class="control-text">
+                        <strong>SELECT NODE</strong>
+                        <span>Left Click to Analyze Star</span>
+                    </div>
+                </div>
+
+                <div class="control-item">
+                    <div class="mouse-icon">
+                        <div class="mouse-body"></div>
+                        <div class="mouse-btn right active"></div>
+                    </div>
+                    <div class="control-text">
+                        <strong>DESELECT / BACK</strong>
+                        <span>Right Click or ESC</span>
+                    </div>
+                </div>
+
+                <div class="control-item">
+                    <div class="mouse-icon">
+                        <div class="mouse-body"></div>
+                        <div class="mouse-wheel active"></div>
+                    </div>
+                    <div class="control-text">
+                        <strong>WARP ZOOM</strong>
+                        <span>Scroll to Travel</span>
+                    </div>
+                </div>
+
+                <div class="control-item">
+                    <div class="mouse-icon">
+                        <div class="mouse-body"></div>
+                        <div class="mouse-btn middle active"></div>
+                    </div>
+                    <div class="control-text">
+                        <strong>TRAJECTORY</strong>
+                        <span>Middle Click / Drag to Pan</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="start-btn">INITIALIZE JOURNEY</button>
+        </div>
     </div>
 
-    <!-- Info overlay shown when a particle or project is selected -->
-    <div id="info-overlay" class="hidden">
-        <button id="info-close" aria-label="Close">×</button>
-        <div id="info-content">
-            <h3 id="info-title">Title</h3>
-            <h4 id="info-subtitle">Subtitle</h4>
-            <p id="info-desc">Description</p>
-            <div id="info-meta">Movie-style credits and visuals will go here.</div>
+    <nav id="top-nav">
+        <div class="nav-left">
+            <a href="#home" class="nav-brand">CK</a>
+            <div class="nav-links">
+                <a href="#home">Home</a>
+                <a href="#" id="nav-projects-link">Projects</a>
+                <a href="#" id="nav-contact-link">Contact</a>
+            </div>
         </div>
+        <div class="nav-right">
+            <a href="#" class="social-icon" aria-label="GitHub">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+            </a>
+        </div>
+    </nav>
+
+    <aside id="left-panel">
+        <div class="panel-header">
+            <h3>PROJECT LOGS</h3>
+            <button id="close-left-panel">×</button>
+        </div>
+        <div id="projects-scroll">
+            <div class="project-banner project-card" data-title="Anveshan 2025" data-subtitle="Tech Fest" data-desc="A full-stack e-commerce platform themed like a space bazaar." data-url="anveshan-details.html">Anveshan 2025</div>
+            <div class="project-banner project-card" data-title="Asteroid Analyzer" data-subtitle="Data Science" data-desc="A data analysis suite that visualizes asteroid trajectories and resource estimates." data-url="asteroid-details.html">Asteroid Analyzer</div>
+            <div class="project-banner project-card" data-title="Orbit Visualizer" data-subtitle="Simulation" data-desc="Interactive orbital paths and maneuver planning." data-url="orbit-details.html">Orbit Visualizer</div>
+            <div class="project-banner project-card" data-title="Nebula Studio" data-subtitle="Generative Art" data-desc="Procedural artworks inspired by nebulae and volumetric clouds." data-url="nebula-details.html">Nebula Studio</div>
+        </div>
+    </aside>
+
+    <aside id="contact-panel">
+        <div class="panel-header">
+            <h3>COMM CHANNELS</h3>
+            <button id="close-contact-panel">×</button>
+        </div>
+        <div class="contact-content">
+            <a href="https://wa.me/1234567890" target="_blank" class="contact-item whatsapp">
+                <span class="icon">💬</span> WhatsApp
+            </a>
+            <a href="https://instagram.com/yourhandle" target="_blank" class="contact-item instagram">
+                <span class="icon">📷</span> Instagram
+            </a>
+            <a href="mailto:chetan@example.com" class="contact-item email">
+                <span class="icon">✉️</span> Email
+            </a>
+        </div>
+    </aside>
+
+    <div id="hud-container">
+        <svg id="hud-line-svg">
+            <line id="hud-connector" x1="0" y1="0" x2="0" y2="0" />
+            <circle id="hud-dot" cx="0" cy="0" r="3" />
+        </svg>
+
+        <div id="hud-window">
+            <div class="hud-header">
+                <div class="hud-scanner-icon">
+                    <div class="scan-line"></div>
+                </div>
+                <div>
+                    <div id="hud-title">UNKNOWN</div>
+                    <div id="hud-sub">SYSTEM DATA</div>
+                </div>
+                <button id="hud-close">×</button>
+            </div>
+            
+            <div class="hud-content">
+                <div class="hud-row">
+                    <span>DISTANCE</span>
+                    <span><span id="hud-distance">0</span> ly</span>
+                </div>
+                <div class="hud-row">
+                    <span>TEMP</span>
+                    <span><span id="hud-temp">0</span> K</span>
+                </div>
+                <div class="hud-row split">
+                     <div>
+                        <span class="small-label">COMP A</span> <span id="hud-comp-a">0</span>%
+                     </div>
+                     <div>
+                        <span class="small-label">COMP B</span> <span id="hud-comp-b">0</span>%
+                     </div>
+                </div>
+                <hr class="hud-divider"/>
+                <div id="hud-desc">Scanning sector...</div>
+                
+                <div class="hud-actions">
+                    <button id="hud-read-more" data-target-url="#">READ MORE >></button>
+                </div>
+
+                <div class="hud-footer">
+                    ANALYSIS COMPLETE <span id="hud-scan">100%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="content-overlay">
+        <main>
+            <section id="hero" style="margin-top: 100px;">
+                <h1>Chetan Khosare</h1>
+                <p>Full Stack Developer | Creator of Digital Galaxies</p>
+                <a id="hero-cta" class="cta-button" style="display:inline-block; margin-top:20px; padding: 10px 20px; border:1px solid #00ffff; color:#00ffff; text-decoration:none; text-transform:uppercase; letter-spacing:2px; font-size:12px; transition:0.3s; cursor: pointer;">View My Cosmos</a>
+            </section>
+        </main>
     </div>
 
     <script src="script.js"></script>
 </body>
-</html>`    
-
+</html>

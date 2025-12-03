@@ -1,14 +1,10 @@
 // anchorWorker.js
-// Worker that receives a positions ArrayBuffer (Float32Array) and a list of target positions
-// and returns nearest particle index + position for each target.
-
 self.onmessage = function (e) {
     const data = e.data;
     const buffer = data.positions;
     const targets = data.targets || [];
     const step = data.step || 1;
 
-    // Reconstruct Float32Array view
     const positions = new Float32Array(buffer);
     const count = positions.length / 3;
 
@@ -28,7 +24,6 @@ self.onmessage = function (e) {
             }
         }
 
-        // local refinement
         if (step > 1) {
             const start = Math.max(0, bestIndex - step * 4);
             const end = Math.min(count - 1, bestIndex + step * 4);
@@ -50,7 +45,5 @@ self.onmessage = function (e) {
     }
 
     const anchors = targets.map(t => findNearestToTarget(t.x, t.y, t.z));
-
-    // Post result back to main thread
     self.postMessage({ anchors });
 };
